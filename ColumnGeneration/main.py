@@ -93,14 +93,14 @@ MAX_ITER_TIMES = 10
 
 cutting_stock = Master(lengths, demands, W)
 cutting_stock.create_model()
+sub_prob = SubProblem(lengths, W)
+sub_prob.create_model()
 
 for k in range(MAX_ITER_TIMES): 
     cutting_stock.solve()
     pi = cutting_stock.get_dual_vars()
     cutting_stock.write()
     
-    sub_prob = SubProblem(lengths, W)
-    sub_prob.create_model()
     sub_prob.set_objective(pi)
     sub_prob.solve()
     y = sub_prob.get_solution()
