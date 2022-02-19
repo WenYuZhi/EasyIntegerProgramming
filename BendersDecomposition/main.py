@@ -52,10 +52,10 @@ class Master:
     def add_cut2(self, B, b, u):
         self.p = np.dot(u.T, B)
         self.q = np.dot(u.T, b)
-        self.m.addConstr(self.z <= self.d*self.y + self.q[0] - self.p[0]*self.y)
+        self.m.addConstr(self.z <= self.q[0] - self.p[0]*self.y)
     
     def set_objective(self):
-        self.m.setObjective(self.z, sense = GRB.MAXIMIZE)
+        self.m.setObjective(self.z + self.d*self.y, sense = GRB.MAXIMIZE)
     
     def solve(self, flag = 0):
         self.m.Params.OutputFlag = flag
@@ -77,7 +77,7 @@ A, B = np.vstack((np.ones((1, N)), np.eye(N))), np.array([1 if i == 0 else 0 for
 b = np.array([1000 if i == 0 else 100 for i in range(N+1)]).reshape(N+1,1)
 
 ub, lb = np.inf, -np.inf
-MAX_ITER_TIMES, eps = 5, 1.0
+MAX_ITER_TIMES, eps = 10, 0.1
 
 subproblem = Subproblem(N, M)
 subproblem.add_constrs(A, c)
@@ -97,8 +97,7 @@ for i in range(MAX_ITER_TIMES):
         masterproblem.add_cut1(B, b, u = rays)
     if solution_status == GRB.Status.OPTIMAL:
         masterproblem.add_cut2(B, b, u = rays)
-        lb = max(lb, subproblem.get_objval())
-        #print("objval: {}".format(subproblem.get_objval()))
+        lb = max(lb, subproblem.get_objval() + d*y)
  
     masterproblem.solve()
     masterproblem.write()
